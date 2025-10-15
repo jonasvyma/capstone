@@ -52,7 +52,7 @@ sns.lineplot(data=starwars_medians, x='year', y='expected_price', ax=ax1, marker
 ax1.set_ylabel('Selling Price (USD)', color='blue')
 ax1.set_xlabel('Year')
 ax1.tick_params(axis='y', labelcolor='blue')
-ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'${x/1000:.0f}K'))
+
 
 ax2 = ax1.twinx()
 sns.lineplot(data=starwars_medians, x='year', y='YoY_Growth', ax=ax2, marker='o', color='green', label='YoY Growth', alpha=0.3)

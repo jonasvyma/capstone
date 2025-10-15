@@ -5,29 +5,54 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
-# Title
-st.title('**The Economics of Nostalgia**: Data-Driven Insights into Collectible Markets')
-st.header('Case studies on Star Wars Figurines and Pokemon Trading Cards ')
+st.set_page_config(page_title="**The Economics of Nostalgia**: Data-Driven Insights into Collectible Markets", page_icon="🎴", layout="wide")
+#Create Tabs
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+    "Business Context",
+    "Hypotheses & Methodology",
+    "Findings of Exploratory Analysis - Star Wars",
+    "Findings of Exploratory Analysis - Pokemon",
+    "Hypothesis 1",
+    "Hypothesis 2",
+    "Hypothesis 3",
+    "Conclusion"
+])
+# Read in variables:
+starwars_moc_loose = pd.read_csv('data/starwars_moc_loose_v7.csv')
+pokemon_final_26 = pd.read_csv('data/final_dataset_csv.csv')
+pokemon_medians = pd.read_csv('data/pokemons_medians_df.csv')
+starwars_medians = pd.read_csv('data/starwars_medians_df.csv')
+starwars_year_figure = pd.read_csv('data/starwars_year_figure.csv')
+pokemon_year_card = pd.read_csv('data/pokemon_year_card_df.csv')
+# For H1 testing 
+pokemon_returns = pokemon_year_card['YoY_Growth'].replace([np.inf, -np.inf], np.nan).dropna()
+starwars_returns = starwars_year_figure['YoY_Growth'].dropna()
+sw_returns_list = starwars_returns.to_list()
+poke_returns_list = pokemon_returns.to_list()
 
-st.subheader('Business Context')
-st.write('In recent years, collectible markets have attracted fans and investors alike, who value them not only for their sentimental value, but also as an alternative asset ' \
-'- similar to art, watches, or crypto.' \
-'The question is: Do collectibles behave financially like traditional assets, ' \
-'showing measurable growth, volatility, correlation, and risk-return patterns similar to stocks or portfolios?')
+with tab1:
+    st.subheader('Case studies on Star Wars Figurines and Pokemon Trading Cards ')
+    st.subheader('Business Context')
+    st.subheader('In recent years, collectible markets have attracted fans and investors alike, who value them not only for their sentimental value, but also as an alternative asset ' \
+             '- similar to art, watches, or crypto.' \
+             'The question is: Do collectibles behave financially like traditional assets, ' \
+             'showing measurable growth, volatility, correlation, and risk-return patterns similar to stocks or portfolios?')
+    st.subheader('*Can Pokémon trading cards and Star Wars figures — when analysed through price history and other factors — be modeled and interpreted as investment-grade assets, exhibiting similar patterns of value appreciation, volatility, and market segmentation as financial securities?*')
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image('images/darth_vader.jpg', caption='How much would you pay for this?')
+    with col2:
+        st.image('images/pikachu.jpg', caption='How valuable do you think this is?')
 
-st.write('*Can Pokémon trading cards and Star Wars figures — when analysed through price history and other factors — be modeled and interpreted as investment-grade assets, exhibiting similar patterns of value appreciation, volatility, and market segmentation as financial securities?*')
-
-
-st.subheader('Research Questions and Hypotheses')
-st.markdown(
+with tab2:
+    st.subheader('Research Questions and Hypotheses')
+    st.markdown(
     "- Cards and figures appreciate over time and deliver an average return over 2%.\n"
     "- Distinct risk–return clusters exist and can be correlated by condition,authenticity,rarity and character/set type.\n"
     "- Forecasts using Prophet and Polynomial methods reveal predictable patterns and markets stabilise post-hype.\n"
     )
-
-
-with st.expander("Hypothesis Testing and Business Research Methodology"):
-    st.markdown(
+    with st.expander("Hypothesis Testing and Business Research Methodology"):
+        st.markdown(
         """
         - **H1:**
             - <u>Pokemon</u>  
@@ -56,9 +81,8 @@ with st.expander("Hypothesis Testing and Business Research Methodology"):
         """,
         unsafe_allow_html=True
     )
-    
-# create dictionary for pokemon terms:
-poke_dict = {
+        # create dictionary for pokemon terms:
+    poke_dict = {
     "Data Name": [
         "asin", "bgs-10-price", "box-only-price", "cib-price", "condition-17-price",
         "condition-18-price", "console-name", "epid", "gamestop-price", "genre",
@@ -93,22 +117,43 @@ poke_dict = {
         "The recommended price for retailers selling to a customer in brand new condition.",
         "The yearly units sold",
         "The items in your guide will include a UPC that helps you track the item and sell on some websites (e.g. eBay). UPCs may not be available for older consoles that came out before UPCs were created."
-    ]
-}
-poke_dict = pd.DataFrame(poke_dict)
-
-with st.expander("Dictionary"):
-    st.markdown(
+    ]}
+    poke_dict = pd.DataFrame(poke_dict)
+    with st.expander("Dictionary"):
+        st.markdown(
         """- <u>Pokemon</u>   
         """,
-        unsafe_allow_html=True
-    )
-    st.dataframe(poke_dict)
-    st.markdown("""
-                <u>Star Wars</u>"""
-                )
+        unsafe_allow_html=True)
     
+        st.dataframe(poke_dict)
+        st.markdown("""
+                <u>Star Wars</u>""")
+                
 
+
+with tab3:
+    st.header('Findings of Exporatory Analysis - Star Wars')
+    st.subheader('Jonas to add here')
+
+with tab4:
+    st.header('Findings of Exploratory Analysis - Pokemon')
+    st.subheader('Jonas to add here')
+   
+with tab5:
+    st.header('Hypothesis 1 - Findings')
+    st.subheader('Amy to add here')
+
+with tab6:
+    st.header("Hypothesis 2 - Findings")
+    st.subheader("Amy to add here")
+
+with tab7:
+    st.header("Hypothesis 3 - Findings")
+    st.subheader("Simo to add here")
+
+with tab8:
+    st.header("Conclusions")
+    st.subheader("Jonas to add here")
 
 #col1, col2 = st.columns(2)
 
