@@ -13,7 +13,7 @@ import itertools
 
 st.set_page_config(page_title="**The Economics of Nostalgia**: Data-Driven Insights into Collectible Markets", page_icon="🎴", layout="wide")
 #Create Tabs
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "Business Context",
     "Hypotheses & Methodology",
     "Exploratory Analysis : Star Wars",
@@ -21,7 +21,6 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
     "Hypothesis 1",
     "Introduction to clusters",
     "Hypothesis 2",
-    "Hypothesis 3",
     "Hypothesis 3",
     "Conclusion"
 ])
@@ -79,7 +78,7 @@ with tab1:
     with col1:
         st.image('images/darth_vader.jpg', caption='How much would you pay for this?')
     with col2:
-        st.image('images/pikachu.jpg', caption='How valuable do you think this is?')
+        st.image('images/1999_charizard.jpg', caption='How valuable do you think this is?')
 
 with tab2:
     st.subheader('Research Questions and Hypotheses')
@@ -965,7 +964,7 @@ with tab8:
     col1, col2 = st.columns(2)
 
     # ============================================================
-    # 🎮 Pokémon — Prophet Forecast (Monthly Graded Cards)
+    # 🎮 Pokémon — Prophet Forecast (Smoothed Graded Cards)
     # ============================================================
     with col1:
         st.subheader("🎮 Pokémon — Graded Cards Market Average (Prophet Forecast)")
@@ -982,18 +981,26 @@ with tab8:
         poke_avg = poke_avg.rename(columns={"month": "ds", "graded": "y"})
 
         if len(poke_avg) >= 12:
+            # Apply rolling average (3 months) to smooth spikes
+            poke_avg["y"] = poke_avg["y"].rolling(window=3, center=True, min_periods=1).mean()
+
+            # Prophet forecast
             m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
             m.fit(poke_avg)
             future = m.make_future_dataframe(periods=6, freq="M")
             fc = m.predict(future)
 
+            # Smooth forecast output
+            fc["yhat_smooth"] = fc["yhat"].rolling(window=3, center=True, min_periods=1).mean()
+
+            # Plot
             fig_p, ax_p = plt.subplots(figsize=(8, 4))
             ax_p.plot(poke_avg["ds"], poke_avg["y"], "k.", label="Historical Avg (Graded)")
-            ax_p.plot(fc["ds"], fc["yhat"], "r-", label="Forecast")
+            ax_p.plot(fc["ds"], fc["yhat_smooth"], "r-", label="Forecast (Smoothed)")
             ax_p.fill_between(fc["ds"], fc["yhat_lower"], fc["yhat_upper"],
                               color="lightcoral", alpha=0.3)
-            ax_p.set_title("Pokémon Graded Cards — Prophet Forecast", fontsize=11, fontweight="bold")
-            ax_p.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))  # numeric formatting
+            ax_p.set_title("Pokémon Graded Cards — Prophet Forecast (Smoothed)", fontsize=11, fontweight="bold")
+            ax_p.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
             ax_p.grid(alpha=0.3)
             ax_p.legend()
             st.pyplot(fig_p)
@@ -1018,7 +1025,7 @@ with tab8:
                 poly = PolynomialFeatures(degree=2)
                 X_poly = poly.fit_transform(X)
                 model = LinearRegression().fit(X_poly, y)
-                y_fit = model.predict(X_poly)  # historical fit
+                y_fit = model.predict(X_poly)
                 future_years = np.arange(sw_avg["year"].max() + 1,
                                          sw_avg["year"].max() + 4).reshape(-1, 1)
                 y_pred = model.predict(poly.transform(future_years))
@@ -1026,7 +1033,7 @@ with tab8:
 
                 fig_sw, ax_sw = plt.subplots(figsize=(8, 4))
                 ax_sw.scatter(X, y, label="Historical Avg (Figures)", color="#0070C0")
-                ax_sw.plot(X, y_fit, "r-", label=f"Polynomial Fit (R²={r2:.2f})")     # full historical fit
+                ax_sw.plot(X, y_fit, "r-", label=f"Polynomial Fit (R²={r2:.2f})")
                 ax_sw.plot(future_years, y_pred, "r--", label="Forecast (Extrapolated)")
                 ax_sw.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
                 ax_sw.set_title("Star Wars Figures — Polynomial Forecast", fontsize=11, fontweight="bold")
@@ -1039,48 +1046,46 @@ with tab8:
             st.error("Missing 'year' or 'selling_price' column in Star Wars dataset.")
 
     # ============================================================
-    # 📈 Normalized Market Index — Recent Years Only
+    # 📈 Normalized Market Index — One Line per Franchise
     # ============================================================
     st.markdown("---")
-    st.subheader("📈 Normalized Market Index — Pokémon Graded Cards vs Star Wars Figures")
+    st.subheader("📈 Normalized Market Index — Pokémon vs Star Wars")
 
     try:
-        # --- Pokémon monthly avg ---
+        # Pokémon: monthly avg + smooth
         df_poke = pokemon_final_26.copy()
         df_poke["date"] = pd.to_datetime(df_poke["date"], errors="coerce")
         df_poke = df_poke.dropna(subset=["date", "graded"])
         df_poke["month"] = df_poke["date"].dt.to_period("M").dt.to_timestamp()
         poke_hist = df_poke.groupby("month")["graded"].mean().reset_index()
-        poke_hist["category"] = "Pokémon Historical"
+        poke_hist["price"] = poke_hist["graded"].rolling(window=3, center=True, min_periods=1).mean()
+        poke_hist["category"] = "Pokémon"
 
-        # --- Star Wars yearly avg ---
+        # Star Wars: yearly avg
         df_sw = starwars_moc_loose.copy()
         df_sw = df_sw.dropna(subset=["year", "selling_price"])
         sw_hist = df_sw.groupby("year")["selling_price"].mean().reset_index()
-        sw_hist["category"] = "Star Wars Historical"
-
-        # Convert both to comparable datetime axis
         sw_hist["date"] = pd.to_datetime(sw_hist["year"], format="%Y")
-        poke_hist = poke_hist.rename(columns={"month": "date", "graded": "price"})
-        sw_hist = sw_hist.rename(columns={"selling_price": "price"})
+        sw_hist["price"] = sw_hist["selling_price"]
+        sw_hist["category"] = "Star Wars"
 
-        # --- Normalize both, base = first value ---
+        # Normalize (base = first value)
         poke_hist["normalized"] = (poke_hist["price"] / poke_hist["price"].iloc[0]) * 100
         sw_hist["normalized"] = (sw_hist["price"] / sw_hist["price"].iloc[0]) * 100
 
-        # --- Filter recent window (post-2015) ---
+        # Filter recent window
         min_date = pd.to_datetime("2015-01-01")
-        poke_hist = poke_hist[poke_hist["date"] >= min_date]
+        poke_hist = poke_hist[poke_hist["month"] >= min_date]
         sw_hist = sw_hist[sw_hist["date"] >= min_date]
 
-        # --- Plot ---
+        # Plot both as single lines
         fig_idx, ax_idx = plt.subplots(figsize=(10, 5))
-        ax_idx.plot(poke_hist["date"], poke_hist["normalized"],
-                    color="#FF6B6B", linewidth=2, marker="o", label="Pokémon Historical")
+        ax_idx.plot(poke_hist["month"], poke_hist["normalized"],
+                    color="#FF6B6B", linewidth=2, marker="o", label="Pokémon")
         ax_idx.plot(sw_hist["date"], sw_hist["normalized"],
-                    color="#4ECDC4", linewidth=2, marker="o", label="Star Wars Historical")
+                    color="#4ECDC4", linewidth=2, marker="o", label="Star Wars")
 
-        ax_idx.set_title("Normalized Market Index (Base = 100) — Recent Years",
+        ax_idx.set_title("Normalized Market Index (Base = 100) — Pokémon vs Star Wars",
                          fontsize=13, fontweight="bold")
         ax_idx.set_xlabel("Date")
         ax_idx.set_ylabel("Normalized Price Index")
@@ -1096,20 +1101,119 @@ with tab8:
     # ============================================================
     st.markdown("""
     ### 🔍 Findings
-    - **Pokémon:** Monthly Prophet forecast captures graded-card volatility and mean reversion.  
-    - **Star Wars:** Polynomial model fits full historical trend and projects mild upward growth.  
-    - **Market Index:** Focused on recent years, both lines show comparable growth behaviour.  
+    - **Pokémon:** Smoothed monthly trend removes outlier spikes and clarifies trajectory.  
+    - **Star Wars:** Polynomial fit now shows full historical and forecast continuity.  
+    - **Market Index:** Each franchise displayed as one clean line, revealing aligned growth momentum.  
     ✅ **Hypothesis 3 validated:** Historical data supports short-term predictive modelling of collectible prices.
     """)
 
 
 
 
-with tab9:
-    st.header("Conclusions")
-    st.subheader("Jonas to add here")
+# ============================================================
+# 🏁 Final Results & Conclusions (Two-Column Fancy Layout)
+# ============================================================
+with tab9:  # or tab10 depending on your structure
+    st.header("🏁 Final Results & Conclusions")
 
+    st.markdown("""
+    <style>
+    .result-col {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    .result-card {
+        background-color: #fafafa;
+        border-radius: 18px;
+        padding: 22px 26px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: transform 0.2s ease-in-out;
+    }
+    .result-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+    .result-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .pink { border-left: 6px solid #ff69b4; }
+    .green { border-left: 6px solid #57D68D; }
+    .blue { border-left: 6px solid #4ECDC4; }
+    .purple { border-left: 6px solid #9370DB; }
+    .result-body {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #333;
+    }
+    .emoji {
+        font-size: 24px;
+        margin-right: 6px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
+    left_col, right_col = st.columns(2)
+
+    # ------------------------------------------------------------
+    with left_col:
+        st.markdown("""
+        <div class='result-col'>
+
+        <div class='result-card pink'>
+            <div class='result-title'>🩷 Hypothesis 1 — Growth Over Time</div>
+            <div class='result-body'>
+            Both markets deliver <b>positive long-term returns</b>.<br><br>
+            • <b>Pokémon:</b> steady, compounding growth — a <i>blue-chip</i> market.<br>
+            • <b>Star Wars:</b> event-driven, cyclical — a <i>speculative</i> asset.<br><br>
+            🪙 <i>Time in the market beats timing the market.</i>
+            </div>
+        </div>
+
+        <div class='result-card green'>
+            <div class='result-title'>💚 Hypothesis 2 — Market Segmentation</div>
+            <div class='result-body'>
+            Clustering revealed <b>three structured tiers</b>: Blue-Chip, Mid-Tier, and Speculative.<br><br>
+            • Pokémon shows <b>tighter, more stable clusters</b> (mature market).<br>
+            • Star Wars shows <b>broader variance</b> (higher risk, higher reward).<br><br>
+            💡 <i>Diversification across tiers mirrors smart portfolio design.</i>
+            </div>
+        </div>
+
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ------------------------------------------------------------
+    with right_col:
+        st.markdown("""
+        <div class='result-col'>
+
+        <div class='result-card blue'>
+            <div class='result-title'>🔮 Hypothesis 3 — Forecastability</div>
+            <div class='result-body'>
+            Short-term trends are <b>predictable</b> and reflect market sentiment.<br><br>
+            • <b>Pokémon:</b> Prophet forecast shows consistent graded-card growth.<br>
+            • <b>Star Wars:</b> Polynomial model captures hype-driven cycles.<br><br>
+            📊 <i>Collectibles move like small-cap growth stocks, following momentum.</i>
+            </div>
+        </div>
+
+        <div class='result-card purple'>
+            <div class='result-title'>💬 Final Insight</div>
+            <div class='result-body'>
+            <blockquote style='font-style:italic; font-size:16px; margin:0 0 8px 0;'>
+            “Nostalgia has evolved into an investable asset class.”
+            </blockquote>
+            Collectibles blend <b>emotion, scarcity, and speculation</b> —  
+            behaving as <b>micro-equities</b> within a cultural economy.<br><br>
+            🌈 <i>Pokémon & Star Wars markets mirror the psychology of investors in traditional finance.</i>
+            </div>
+        </div>
+
+        </div>
+        """, unsafe_allow_html=True)
 
 
 
