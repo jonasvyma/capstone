@@ -4,16 +4,24 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import matplotlib.ticker as ticker
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+import itertools
 
 st.set_page_config(page_title="**The Economics of Nostalgia**: Data-Driven Insights into Collectible Markets", page_icon="🎴", layout="wide")
 #Create Tabs
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
     "Business Context",
     "Hypotheses & Methodology",
     "Exploratory Analysis : Star Wars",
     "Exploratory Analysis : Pokemon",
     "Hypothesis 1",
+    "Introduction to clusters",
     "Hypothesis 2",
+    "Hypothesis 3",
     "Hypothesis 3",
     "Conclusion"
 ])
@@ -29,6 +37,35 @@ pokemon_returns = pokemon_year_card['YoY_Growth'].replace([np.inf, -np.inf], np.
 starwars_returns = starwars_year_figure['YoY_Growth'].dropna()
 sw_returns_list = starwars_returns.to_list()
 poke_returns_list = pokemon_returns.to_list()
+# setting cols as lower case
+pokemon_year_card.columns= pokemon_year_card.columns.str.lower()
+pokemon_final_26.columns= pokemon_final_26.columns.str.lower()
+pokemon_medians.columns=pokemon_medians.columns.str.lower()
+starwars_medians.columns= starwars_medians.columns.str.lower()
+starwars_moc_loose.columns=starwars_moc_loose.columns.str.lower()
+starwars_year_figure.columns=starwars_year_figure.columns.str.lower()
+
+# For H2 testing 
+pokemon_year_card = pokemon_year_card.merge(
+    pokemon_final_26[['card name', 'rarity','set name']],
+    how='left',
+    on='card name'
+)
+pokemon_year_card = pokemon_year_card.rename(columns={'set name': 'set_name','card name':'card_name'})
+pokemon_final_26 = pokemon_final_26.rename(columns={'set name': 'set_name','card name':'card_name'})
+pokemon_year_card['rarity'] = pokemon_year_card['rarity'].astype('category')
+pokemon_year_card['set_name'] = pokemon_year_card['set_name'].astype('category')
+pokemon_year_card = pokemon_year_card.replace([np.inf, -np.inf], np.nan).dropna()
+
+sw_groupby_condition = starwars_moc_loose.groupby(['year','condition','authenticity_n','character_type'])['selling_price'].median().reset_index().sort_values(['condition','authenticity_n','character_type', 'year'])
+sw_groupby_condition['yoy_growth'] = sw_groupby_condition['selling_price'].pct_change()
+sw_groupby_condition = sw_groupby_condition.dropna()
+#sw_groupby_condition
+sw_groupby_condition['condition_label'] = sw_groupby_condition['condition'].map({
+    0: 'Loose',
+    1: 'Mint on Card'
+})
+
 
 with tab1:
     st.subheader('Case studies on Star Wars Figurines and Pokemon Trading Cards ')
@@ -556,10 +593,119 @@ with tab4:
 
    
 with tab5:
-    st.header('Hypothesis 1 - Findings')
-    st.subheader('Amy to add here')
+    # For H1 testing 
+    pokemon_returns = pokemon_year_card['yoy_growth'].replace([np.inf, -np.inf], np.nan).dropna()
+    starwars_returns = starwars_year_figure['yoy_growth'].dropna()
+    sw_returns_list = starwars_returns.to_list()
+    poke_returns_list = pokemon_returns.to_list()
+    st.header('📈Hypothesis 1 - Growth Analysis')
+    col3, col4 = st.columns(2)
+    with col3:
+        # Plot Median Prices Star Wars 
+        st.subheader('Star Wars Figures')
+        fig, ax1 = plt.subplots(figsize=(10, 6))
 
+        sns.lineplot(data=starwars_medians, x='year', y='selling_price', ax=ax1, marker='o', color='blue', label='Median Selling Price')
+        sns.lineplot(data=starwars_medians, x='year', y='expected_price', ax=ax1, marker='o', color='red', label='Expected Price\n with 2% return p.a')
+
+        ax1.set_ylabel('Selling Price (USD)', color='blue')
+        ax1.set_xlabel('Year')
+        ax1.tick_params(axis='y', labelcolor='blue')
+
+
+        ax2 = ax1.twinx()
+        sns.lineplot(data=starwars_medians, x='year', y='yoy_growth', ax=ax2, marker='o', color='green', label='YoY Growth', alpha=0.3)
+        ax2.set_ylabel('YoY Growth (%)', color='green')
+        ax2.tick_params(axis='y', labelcolor='green')
+        ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'{y * 10:.1f}%'))
+
+        ax1.grid(True)
+        ax1.legend(loc='upper left')
+        st.pyplot(fig)
+        
+    with col4:
+        # Plot Median Prices Pokemon 
+        st.subheader('Pokemon Cards')
+        fig, ax1 = plt.subplots(figsize=(10, 6))
+
+        sns.lineplot(data=pokemon_medians, x='year', y='graded', ax=ax1, marker='o', color='blue', label='Median Selling Price')
+        sns.lineplot(data=pokemon_medians, x='year', y='expected_price', ax=ax1, marker='o', color='red', label='Expected Price\n with 2% return p.a')
+
+        ax1.set_ylabel('Selling Price (USD)', color='blue')
+        ax1.set_xlabel('Year')
+        ax1.tick_params(axis='y', labelcolor='blue')
+
+
+        ax2 = ax1.twinx()
+        sns.lineplot(data=pokemon_medians, x='year', y='yoy_growth', ax=ax2, marker='o', color='green', label='YoY Growth', alpha=0.3)
+        ax2.set_ylabel('YoY Growth (%)', color='green')
+        ax2.tick_params(axis='y', labelcolor='green')
+        ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f'{y * 10:.1f}%'))
+
+        ax1.grid(True)
+        ax1.legend(loc='upper left')
+        st.pyplot(fig)
+
+    # Display Result of T-Test 
+    exp_return = 0.02 # In this case 0.02 acts as 'population mean'
+    sw_t_stat, sw_p_value = stats.ttest_1samp(sw_returns_list, exp_return)
+    poke_t_stat, poke_p_value = stats.ttest_1samp(poke_returns_list, exp_return)
+
+    test_results_h1 = pd.DataFrame({
+    'Franchise': ['Star Wars', 'Pokemon'],
+    'T-Statistic': [sw_t_stat, poke_t_stat],
+    'P-Value': [sw_p_value, poke_p_value]
+     })
+    st.dataframe(test_results_h1)
+
+    st.error("**H₀:** Star Wars and Pokémon, on average, do not exceed the expected annual return of 2%. ❌ Rejected")
+    st.success("**H₁:** Star Wars and Pokémon, on average, achieve an annual return greater than 2%. ✅ Accepted")
 with tab6:
+
+    st.header("Understanding Market Clusters")
+
+    # --------------------------------------------------------------
+    # Two-column layout: images left, text right
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        st.image("images/Vintage-Yakface_Big_2.jpg", caption="Blue-Chip Collectible Example", width=250)
+        st.image("images/BenKenobi.png", caption="Mid-Tier Collectible Example", width=250)
+        st.image("images/darth_vader.jpg", caption="Speculative Collectible Example", width=250)
+
+    with col2:
+        # Blue-Chip
+        with st.expander("Blue-Chip Collectibles"):
+            st.markdown("""
+            **Low risk · High stability**  
+            - Iconic cards or figures  
+            - Consistent long-term growth  
+            """)
+
+        st.divider()
+
+        # Mid-Tier
+        with st.expander("Mid-Tier Collectibles"):
+            st.markdown("""
+            **Moderate risk · Moderate volatility**  
+            - Balance between value and growth potential  
+            - Driven by popularity, media trends, and nostalgia
+            """)
+
+        st.divider()
+
+        # Speculative
+        with st.expander("Speculative Collectibles"):
+            st.markdown("""
+            **High risk · High reward**  
+            - Driven by short-term hype or cultural moments  
+            - Rapid price swings — limited historical data  
+            """)
+
+        st.divider()
+
+
+with tab7:
     # ============================================================
     # 🧩 Hypothesis 2 — Market Segmentation & Clustering
     # ============================================================
@@ -583,23 +729,23 @@ with tab6:
     # 🟢 Pokémon Data Prep
     # ------------------------------------------------------------
     df_poke = pokemon_final_26.copy()
-    df_poke["Date"] = pd.to_datetime(df_poke["Date"], errors="coerce")
-    df_poke = df_poke.dropna(subset=["Graded", "Date"])
-    df_poke = df_poke.sort_values(["Card Name", "Date"])
+    df_poke["date"] = pd.to_datetime(df_poke["date"], errors="coerce")
+    df_poke = df_poke.dropna(subset=["graded", "date"])
+    df_poke = df_poke.sort_values(["card_name", "date"])
 
     growth_data = []
-    for card, sub in df_poke.groupby("Card Name"):
-        sub = sub.sort_values("Date")
-        sub["YoY_Growth"] = sub["Graded"].pct_change().replace([np.inf, -np.inf], np.nan)
-        if sub["YoY_Growth"].notna().sum() >= 2:
+    for card, sub in df_poke.groupby("card_name"):
+        sub = sub.sort_values("date")
+        sub["yoy_growth"] = sub["graded"].pct_change().replace([np.inf, -np.inf], np.nan)
+        if sub["yoy_growth"].notna().sum() >= 2:
             growth_data.append({
-                "Card Name": card,
-                "Illustrator": sub["Illustrator"].iloc[0],
-                "Set Name": sub["Set Name"].iloc[0],
-                "Mean_Growth": sub["YoY_Growth"].mean(skipna=True),
-                "Volatility": sub["YoY_Growth"].std(skipna=True)
+                "card_name": card,
+                "illustrator": sub["illustrator"].iloc[0],
+                "set_name": sub["set_name"].iloc[0],
+                "mean_growth": sub["yoy_growth"].mean(skipna=True),
+                "volatility": sub["yoy_growth"].std(skipna=True)
             })
-    poke_feat = pd.DataFrame(growth_data).dropna(subset=["Mean_Growth", "Volatility"])
+    poke_feat = pd.DataFrame(growth_data).dropna(subset=["mean_growth", "volatility"])
 
     # ------------------------------------------------------------
     # 🔵 Star Wars Data Prep
@@ -607,11 +753,11 @@ with tab6:
     df_sw = starwars_moc_loose.copy()
     df_sw = df_sw.dropna(subset=["total_growth", "volatility_y"])
     sw_feat = df_sw.groupby("figure").agg(
-        Mean_Growth=("total_growth", "mean"),
-        Volatility=("volatility_y", "mean"),
-        Condition=("condition", "first"),
-        Authenticity=("authenticity_n", "first"),
-        Character_Type=("character_type", "first")
+        mean_growth=("total_growth", "mean"),
+        volatility=("volatility_y", "mean"),
+        condition=("condition", "first"),
+        authenticity=("authenticity_n", "first"),
+        character_type=("character_type", "first")
     ).reset_index().dropna()
 
     # ------------------------------------------------------------
@@ -625,14 +771,14 @@ with tab6:
 
     if len(poke_feat) >= 3 and len(sw_feat) >= 3:
         scaler = StandardScaler()
-        kmp = KMeans(n_clusters=3, random_state=42, n_init=10).fit(scaler.fit_transform(poke_feat[["Mean_Growth", "Volatility"]]))
-        kms = KMeans(n_clusters=3, random_state=42, n_init=10).fit(scaler.fit_transform(sw_feat[["Mean_Growth", "Volatility"]]))
+        kmp = KMeans(n_clusters=3, random_state=42, n_init=10).fit(scaler.fit_transform(poke_feat[["mean_growth", "volatility"]]))
+        kms = KMeans(n_clusters=3, random_state=42, n_init=10).fit(scaler.fit_transform(sw_feat[["mean_growth", "volatility"]]))
 
         cluster_labels = {0: "Blue-Chip", 1: "Mid-Tier", 2: "Speculative"}
-        poke_feat["Cluster_Name"] = poke_feat["Cluster"] = kmp.labels_
-        poke_feat["Cluster_Name"] = poke_feat["Cluster_Name"].map(cluster_labels)
-        sw_feat["Cluster_Name"] = sw_feat["Cluster"] = kms.labels_
-        sw_feat["Cluster_Name"] = sw_feat["Cluster_Name"].map(cluster_labels)
+        poke_feat["cluster_name"] = poke_feat["cluster"] = kmp.labels_
+        poke_feat["cluster_name"] = poke_feat["cluster_name"].map(cluster_labels)
+        sw_feat["cluster_name"] = sw_feat["cluster"] = kms.labels_
+        sw_feat["cluster_name"] = sw_feat["cluster_name"].map(cluster_labels)
 
         # ------------------------------------------------------------
         # 📊 Side-by-Side Cluster Charts + Statistical Tests
@@ -643,8 +789,8 @@ with tab6:
         with col1:
             fig1, ax1 = plt.subplots(figsize=(6, 5))
             sns.scatterplot(
-                data=poke_feat, x="Mean_Growth", y="Volatility",
-                hue="Cluster_Name", palette=palette_named, s=100, ax=ax1
+                data=poke_feat, x="mean_growth", y="volatility",
+                hue="cluster_name", palette=palette_named, s=100, ax=ax1
             )
             ax1.set_title("🎮 Pokémon — Growth vs Volatility Clusters", fontsize=11)
             ax1.grid(alpha=.3)
@@ -656,12 +802,12 @@ with tab6:
             poke_tests_displayed = 0
 
             # 💰 Graded ↔ Growth
-            if "Graded" in df_poke.columns:
-                if "Mean_Growth" in poke_feat.columns and len(poke_feat) > 2:
-                    card_prices = df_poke.groupby("Card Name")["Graded"].mean().reset_index()
-                    merged_data = poke_feat.merge(card_prices, on="Card Name", how="inner")
+            if "graded" in df_poke.columns:
+                if "mean_growth" in poke_feat.columns and len(poke_feat) > 2:
+                    card_prices = df_poke.groupby("card_name")["graded"].mean().reset_index()
+                    merged_data = poke_feat.merge(card_prices, on="card_name", how="inner")
                     if len(merged_data) > 2:
-                        corr, p_val = stats.pearsonr(merged_data["Graded"], merged_data["Mean_Growth"])
+                        corr, p_val = stats.pearsonr(merged_data["graded"], merged_data["mean_growth"])
                         color = "green" if p_val < 0.05 else "red"
                         st.markdown(
                             f"<b>💰 Graded Price ↔ Growth:</b> "
@@ -673,8 +819,8 @@ with tab6:
                         poke_tests_displayed += 1
 
             # 🎨 Illustrator → Growth
-            if "Illustrator" in poke_feat.columns:
-                groups = [g["Mean_Growth"].dropna() for _, g in poke_feat.groupby("Illustrator") if len(g) > 1]
+            if "illustrator" in poke_feat.columns:
+                groups = [g["mean_growth"].dropna() for _, g in poke_feat.groupby("illustrator") if len(g) > 1]
                 if len(groups) > 1:
                     f_stat, p_val = stats.f_oneway(*groups)
                     color = "green" if p_val < 0.05 else "red"
@@ -688,8 +834,8 @@ with tab6:
                     poke_tests_displayed += 1
 
             # 🧩 Set Name → Growth
-            if "Set Name" in poke_feat.columns:
-                groups = [g["Mean_Growth"].dropna() for _, g in poke_feat.groupby("Set Name") if len(g) > 1]
+            if "set_name" in poke_feat.columns:
+                groups = [g["mean_growth"].dropna() for _, g in poke_feat.groupby("set_name") if len(g) > 1]
                 if len(groups) > 1:
                     f_stat, p_val = stats.f_oneway(*groups)
                     color = "green" if p_val < 0.05 else "red"
@@ -709,8 +855,8 @@ with tab6:
         with col2:
             fig2, ax2 = plt.subplots(figsize=(6, 5))
             sns.scatterplot(
-                data=sw_feat, x="Mean_Growth", y="Volatility",
-                hue="Cluster_Name", palette=palette_named, s=100, ax=ax2
+                data=sw_feat, x="mean_growth", y="volatility",
+                hue="cluster_name", palette=palette_named, s=100, ax=ax2
             )
             ax2.set_title("🌌 Star Wars — Growth vs Volatility Clusters", fontsize=11)
             ax2.grid(alpha=.3)
@@ -721,10 +867,30 @@ with tab6:
             st.markdown("### 🌌 Star Wars — Statistical Tests")
             sw_tests_displayed = 0
 
+            # Run ANOVA model only once
+            model = ols(
+                'total_growth ~ C(condition) + C(character_type) + C(authenticity_n) '
+                '+ C(condition):C(character_type) '
+                '+ C(condition):C(authenticity_n) '
+                '+ C(authenticity_n):C(character_type) '
+                '+ C(condition):C(character_type):C(authenticity_n)',
+                data=starwars_moc_loose
+            ).fit()
+
+            anova_table_growth_sw = sm.stats.anova_lm(model, typ=2).reset_index()
+
+            # Helper function to extract F and p values
+            def extract_anova_values(anova_table, term):
+                row = anova_table[anova_table['index'] == term]
+                if not row.empty:
+                    f = row["F"].values[0]
+                    p = row["PR(>F)"].values[0]
+                    return f, p
+                return None, None
+
             # 1️⃣ Condition → Growth
-            groups = [g["Mean_Growth"].dropna() for _, g in sw_feat.groupby("Condition") if len(g) > 1]
-            if len(groups) > 1:
-                f_stat, p_val = stats.f_oneway(*groups)
+            f_stat, p_val = extract_anova_values(anova_table_growth_sw, "C(condition)")
+            if f_stat is not None and p_val is not None:
                 color = "green" if p_val < 0.05 else "red"
                 st.markdown(
                     f"<b>🧱 Condition → Growth:</b> "
@@ -733,17 +899,16 @@ with tab6:
                     f"<i>Tests whether mint, loose, or packaged figures exhibit different growth profiles.</i>",
                     unsafe_allow_html=True
                 )
+                sw_tests_displayed += 1
             else:
                 st.markdown(
                     "<b>🧱 Condition → Growth:</b> <span style='color:gray'>Not enough data for test.</span>",
                     unsafe_allow_html=True
                 )
-            sw_tests_displayed += 1
 
-            # 2️⃣ Authenticity → Growth (✅ fixed)
-            groups = [g["Mean_Growth"].dropna() for _, g in sw_feat.groupby("Authenticity") if len(g) > 1]
-            if len(groups) > 1:
-                f_stat, p_val = stats.f_oneway(*groups)
+            # 2️⃣ Authenticity → Growth
+            f_stat, p_val = extract_anova_values(anova_table_growth_sw, "C(authenticity_n)")
+            if f_stat is not None and p_val is not None:
                 color = "green" if p_val < 0.05 else "red"
                 st.markdown(
                     f"<b>🔖 Authenticity → Growth:</b> "
@@ -752,17 +917,16 @@ with tab6:
                     f"<i>Evaluates if authenticity level correlates with collectible growth rates.</i>",
                     unsafe_allow_html=True
                 )
+                sw_tests_displayed += 1
             else:
                 st.markdown(
                     "<b>🔖 Authenticity → Growth:</b> <span style='color:gray'>Not enough data for test.</span>",
                     unsafe_allow_html=True
                 )
-            sw_tests_displayed += 1
 
             # 3️⃣ Character Type → Growth
-            groups = [g["Mean_Growth"].dropna() for _, g in sw_feat.groupby("Character_Type") if len(g) > 1]
-            if len(groups) > 1:
-                f_stat, p_val = stats.f_oneway(*groups)
+            f_stat, p_val = extract_anova_values(anova_table_growth_sw, "C(character_type)")
+            if f_stat is not None and p_val is not None:
                 color = "green" if p_val < 0.05 else "red"
                 st.markdown(
                     f"<b>🦾 Character Type → Growth:</b> "
@@ -771,31 +935,25 @@ with tab6:
                     f"<i>Checks if hero, villain, or droid characters behave differently in price appreciation.</i>",
                     unsafe_allow_html=True
                 )
+                sw_tests_displayed += 1
             else:
                 st.markdown(
                     "<b>🦾 Character Type → Growth:</b> <span style='color:gray'>Not enough data for test.</span>",
                     unsafe_allow_html=True
                 )
-            sw_tests_displayed += 1
 
             if sw_tests_displayed < 3:
                 st.info(f"ℹ️ Displaying {sw_tests_displayed} of 3 Star Wars statistical tests (some data may be missing)")
+        # ---- EXPANDABLE ANOVA TABLE BELOW BOTH COLUMNS ----
+    with st.expander("📊 Show Full ANOVA Results Table: Star Wars"):
+        st.dataframe(anova_table_growth_sw)
+ 
 
-    # ------------------------------------------------------------
-    # 🧩 Findings Summary
-    # ------------------------------------------------------------
-    st.markdown("""
-    ### 🔍 Findings
-    - Both markets form **three distinct clusters**: blue-chip, mid-tier, and speculative.  
-    - Pokémon shows **more stable and compact clusters**, reflecting a mature market.  
-    - Star Wars shows **higher within-group volatility**, indicating event-driven price changes.  
-    ✅ **Hypothesis 2 validated:** Collectibles exhibit structured market segmentation.
-    """)
 
 # ============================================================
 # 🔮 Hypothesis 3 — Forecastability of Collectibles
 # ============================================================
-with tab7:
+with tab8:
     st.header("🔮 Hypothesis 3 — Forecastability of Collectibles")
 
     st.markdown("""
@@ -816,12 +974,12 @@ with tab7:
         import matplotlib.ticker as mtick
 
         df_poke = pokemon_final_26.copy()
-        df_poke["Date"] = pd.to_datetime(df_poke["Date"], errors="coerce")
-        df_poke = df_poke.dropna(subset=["Date", "Graded"])
-        df_poke["Month"] = df_poke["Date"].dt.to_period("M").dt.to_timestamp()
+        df_poke["date"] = pd.to_datetime(df_poke["date"], errors="coerce")
+        df_poke = df_poke.dropna(subset=["date", "graded"])
+        df_poke["month"] = df_poke["date"].dt.to_period("M").dt.to_timestamp()
 
-        poke_avg = df_poke.groupby("Month")["Graded"].mean().reset_index()
-        poke_avg = poke_avg.rename(columns={"Month": "ds", "Graded": "y"})
+        poke_avg = df_poke.groupby("month")["graded"].mean().reset_index()
+        poke_avg = poke_avg.rename(columns={"month": "ds", "graded": "y"})
 
         if len(poke_avg) >= 12:
             m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
@@ -889,10 +1047,10 @@ with tab7:
     try:
         # --- Pokémon monthly avg ---
         df_poke = pokemon_final_26.copy()
-        df_poke["Date"] = pd.to_datetime(df_poke["Date"], errors="coerce")
-        df_poke = df_poke.dropna(subset=["Date", "Graded"])
-        df_poke["Month"] = df_poke["Date"].dt.to_period("M").dt.to_timestamp()
-        poke_hist = df_poke.groupby("Month")["Graded"].mean().reset_index()
+        df_poke["date"] = pd.to_datetime(df_poke["date"], errors="coerce")
+        df_poke = df_poke.dropna(subset=["date", "graded"])
+        df_poke["month"] = df_poke["date"].dt.to_period("M").dt.to_timestamp()
+        poke_hist = df_poke.groupby("month")["graded"].mean().reset_index()
         poke_hist["category"] = "Pokémon Historical"
 
         # --- Star Wars yearly avg ---
@@ -903,7 +1061,7 @@ with tab7:
 
         # Convert both to comparable datetime axis
         sw_hist["date"] = pd.to_datetime(sw_hist["year"], format="%Y")
-        poke_hist = poke_hist.rename(columns={"Month": "date", "Graded": "price"})
+        poke_hist = poke_hist.rename(columns={"month": "date", "graded": "price"})
         sw_hist = sw_hist.rename(columns={"selling_price": "price"})
 
         # --- Normalize both, base = first value ---
@@ -947,7 +1105,7 @@ with tab7:
 
 
 
-with tab8:
+with tab9:
     st.header("Conclusions")
     st.subheader("Jonas to add here")
 
@@ -956,14 +1114,3 @@ with tab8:
 
 
 
-
-
-
-
-#col1, col2 = st.columns(2)
-
-#with col1:
-   # st.image('Users/amyby/Desktop/Bootcamp/final_project/images/darth_vader.jpg', caption='How much would you pay for this?')
-
-#with col2:
-    #st.image('Users/amyby/Desktop/Bootcamp/final_project/images/pikachu.jpg', caption='How valuable do you think this is?')
