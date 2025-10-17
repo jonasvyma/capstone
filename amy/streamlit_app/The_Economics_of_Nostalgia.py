@@ -87,6 +87,14 @@ with tab2:
     "- Distinct risk–return clusters exist and can be correlated by condition,authenticity,rarity and character/set type.\n"
     "- Forecasts using Prophet and Polynomial methods reveal predictable patterns and markets stabilise post-hype.\n"
     )
+    st.subheader('Key Terms')
+    st.markdown(
+    "- **Graded:** Items which are verified as being authentic.\n"
+    "- **Ungraded:** Items whose authenticity have not been verified.\n"
+    "- **Mint on card:** Items which are unopened, in original packaging.\n"
+    "- **Loose:** Items which are used and no longer in original packaging.\n"
+    )
+    
     with st.expander("Hypothesis Testing and Business Research Methodology"):
         st.markdown(
         """
@@ -1167,7 +1175,7 @@ with tab9:  # or tab10 depending on your structure
             <div class='result-body'>
             Both markets deliver <b>positive long-term returns</b>.<br><br>
             • <b>Pokémon:</b> steady, compounding growth — a <i>blue-chip</i> market.<br>
-            • <b>Star Wars:</b> event-driven, cyclical — a <i>speculative</i> asset.<br><br>
+            • <b>Star Wars:</b> possibly event-driven, cyclical — a <i>speculative</i> asset.<br><br>
             🪙 <i>Time in the market beats timing the market.</i>
             </div>
         </div>
