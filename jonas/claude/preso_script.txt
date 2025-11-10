@@ -1,0 +1,72 @@
+=== 3-MINUTE PRESENTATION SCRIPT (BULLET FORMAT) ===
+
+INTRO — 15 sec
+• Hi everyone, I’m Jonas. This project explores collectible pricing — specifically Pokémon cards and Star Wars figures.
+• The goal: uncover how condition, authenticity, and rarity shape market value.
+• The data combines real historical prices and authentic sales records.
+
+───────────────────────────────
+POKÉMON CARD ANALYSIS
+
+DATA OVERVIEW — 15 sec
+• Dataset is complete, clean, and mostly numeric.
+• Prices show a strong right-skew: a few expensive cards pull the average up.
+• XXXMedian values and log-scaled plots are better for interpretation.
+
+TOP 10 MOST VALUABLE POKÉMON CARDS — 25 sec
+• The highest-value cards cluster around early-generation grails.
+• “Charizard Base Set” dominates across conditions.
+• Median prices highlight consistency — not just one-off sales.
+• Observation: collector nostalgia remains the main price driver.
+
+TOP 10 POKÉMON SETS BY AVG GRADED PRICE — 20 sec
+• Vintage sets (Base Set, Neo, Jungle) lead overall.
+• Modern sets with special illustrations rank high but show more volatility.
+• Insight: legacy sets provide long-term stability.
+
+PRICE DISTRIBUTION BY CONDITION — 25 sec
+• Boxed or graded items skew heavily upward.
+• The “graded” condition adds a visible premium on the log-scale boxplot.
+• Condition and authenticity have multiplicative effects.
+• Takeaway: grading creates a strong pricing tier.
+
+GROWTH ANALYSIS & TOP 3 BY GROWTH — 25 sec
+• Price growth is cyclical, not linear.
+• Peaks align with major card releases or hype waves.
+• Top growth cards combine nostalgia and PSA/BGS certification.
+• Long-term investors benefit from holding iconic cards during hype cycles.
+
+───────────────────────────────
+STAR WARS FIGURE ANALYSIS
+
+DATA OVERVIEW — 10 sec
+• Dataset mirrors Pokémon but includes authenticity (0/1) and condition (MoC vs loose).
+• Skewed distributions again make median the preferred statistic.
+
+TOP 10 MOST VALUABLE FIGURES (BY CATEGORY) — 25 sec
+• MoC (Mint on Card) + Authentic = highest average selling price.
+• Loose + Not Authentic = lowest value tier.
+• Packaging and authenticity compound to lift price.
+• Clear stratification: condition and trustworthiness drive market hierarchy.
+
+TOP 10 MOST SOLD FIGURES — 15 sec
+• Most-sold figures are common characters, not the most valuable.
+• High volume ≠ high price — these serve as “velocity” products.
+• Premium items have fewer but higher-value sales.
+
+PRICE DISTRIBUTION BY CATEGORY — 20 sec
+• Boxplots show higher medians and wider spreads for authenticated items.
+• Log scaling highlights the multiplicative price jump between condition levels.
+
+GROWTH ANALYSIS — 20 sec
+• Median prices trend up over time, with visible event-based spikes.
+• MoC Authentic figures sustain appreciation longer than others.
+• Market cycles often align with franchise media releases.
+
+───────────────────────────────
+CLOSING — 15 sec
+• Overall insight: authentication, condition, and provenance are the key price levers.
+• Both markets reward verified rarity and penalize uncertainty.
+• Recommendation: segment markets by authenticity × condition before pricing.
+
+(End of 3-minute walkthrough)

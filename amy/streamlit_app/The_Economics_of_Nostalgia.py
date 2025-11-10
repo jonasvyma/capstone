@@ -429,27 +429,27 @@ with tab4:
     st.markdown("---")
 
     # Top 10 Most Valuable Pokemon Cards
-    st.subheader("Top 10 Most Valuable Pokemon Cards")
-    card_avg_prices = df[df['Graded'] > 0].groupby('Card Name')['Graded'].mean().sort_values(ascending=False).head(10)
+    #st.subheader("Top 10 Most Valuable Pokemon Cards")
+    #card_avg_prices = df[df['Graded'] > 0].groupby('Card Name')['Graded'].mean().sort_values(ascending=False).head(10)
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    #fig, ax = plt.subplots(figsize=(12, 8))
 
     # Create gradient colors (dark to light, descending)
-    colors = plt.cm.Blues(np.linspace(0.8, 0.3, len(card_avg_prices)))
+    #colors = plt.cm.Blues(np.linspace(0.8, 0.3, len(card_avg_prices)))
 
-    ax.barh(range(len(card_avg_prices)), card_avg_prices.values,
-            alpha=0.8, edgecolor='black', color=colors)
-    ax.set_yticks(range(len(card_avg_prices)))
-    ax.set_yticklabels(card_avg_prices.index)
-    ax.set_xlabel('Average Graded Price ($)')
-    ax.set_title('Top 10 Most Valuable Pokemon Cards (Graded)')
-    ax.invert_yaxis()
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-    plt.tight_layout()
-    st.pyplot(fig)
-    plt.close()
+    #ax.barh(range(len(card_avg_prices)), card_avg_prices.values,
+     #       alpha=0.8, edgecolor='black', color=colors)
+    #ax.set_yticks(range(len(card_avg_prices)))
+    #ax.set_yticklabels(card_avg_prices.index)
+    #ax.set_xlabel('Average Graded Price ($)')
+    #ax.set_title('Top 10 Most Valuable Pokemon Cards (Graded)')
+    #ax.invert_yaxis()
+    #ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    #plt.tight_layout()
+    #st.pyplot(fig)
+    #plt.close()
 
-    st.markdown("---")
+    #st.markdown("---")
 
     # Top 10 Pokemon Sets by Average Graded Price
     st.subheader("Top 10 Pokemon Sets by Average Graded Price")

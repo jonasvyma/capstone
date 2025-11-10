@@ -1,0 +1,91 @@
+=== 3-Minute Presentation Script ===
+(Opening — 10 sec)
+Hi everyone, I’m Jonas. In three minutes I’ll walk you through key takeaways from my Collectibles Pricing Analysis covering Pokémon cards and Star Wars figures.
+
+(Pokémon — Data Overview — 20 sec)
+We start with a clean dataset of card sales enriched with rarity, set, and condition. Most columns are complete, and prices are right‑skewed, so medians and log‑views are more reliable than raw means.
+
+(Pokémon — Top 15 Most Valuable Cards — 35 sec)
+This bar chart ranks the highest median graded prices. The story: premiums concentrate in a small set of grail cards. Variants with iconic artwork and early‑set provenance dominate. Outliers exist, but median ranking reduces noise from single expensive sales.
+
+(Pokémon — Top 10 Sets by Avg Graded Price — 25 sec)
+A set‑level roll‑up shows value clusters. Vintage and special‑illustration heavy sets sit at the top. Modern sets with high chase rarity can break in, but consistency still favors established sets.
+
+(Pokémon — Price Distribution by Condition — 25 sec)
+Box/graded vs loose/used separates clearly. Graded consistently shifts the distribution right with a heavier upper tail. This quantifies the “condition premium” and motivates authentication as a value lever.
+
+(Pokémon — Growth Analysis & Top 3 by Growth — 30 sec)
+Time‑series lines show uneven appreciation: spikes around releases or hype cycles, then mean‑reversion. Top growth cards share two traits: strong brand nostalgia and grading activity. The takeaway is that momentum is episodic; holding quality beats chasing peaks.
+
+(Star Wars — Data Overview — 15 sec)
+Structure mirrors Pokémon: figure, condition (MoC vs loose), authenticity, price, year. Distributions are again right‑skewed, so we rely on medians.
+
+(Star Wars — Top 10 Most Valuable by Grading Status — 30 sec)
+Four panels split MoC/Loose × Authentic/Not. MoC + authentic leads, Loose + not authentic lags. The gap illustrates how packaging and certification stack multiplicatively on price.
+
+(Star Wars — Top 10 Best Selling by Grading Status — 20 sec)
+High volume doesn’t equal high value. Common characters dominate counts; premium variants dominate price. Inventory strategy should separate “velocity SKUs” from “margin SKUs.”
+
+(Star Wars — Price Distribution by Grading Status — 20 sec)
+Boxplots show dispersion and outliers. Certification widens the spread upwards; medians step up cleanly across tiers. This supports a tiered pricing framework.
+
+(Star Wars — Growth & Top 3 by Growth — 25 sec)
+Median price by month trends upwards in cycles, with authentic MoC showing the most durable growth. Peaks align with media cycles and collector events.
+
+(Closing — 15 sec)
+In short: value concentrates in authenticated, high‑condition items; volume concentrates in common items. Use medians, trim outliers, and segment by condition × authenticity to make decisions. Thanks!
+
+
+=== Bullet Points by Chart ===
+
+[Pokemon Card Pricing Analysis]
+- Data Overview
+  • Prices are right‑skewed; use medians/log scale for robustness.
+  • Data completeness is high; minimal missingness.
+  • Rarity and set fields enable powerful grouping.
+- Top 15 Most Valuable Pokemon Cards
+  • Value is concentrated in a small number of grail cards.
+  • Median-based ranking dampens single-sale outliers.
+  • Early sets and iconic artwork dominate the top.
+- Top 10 Pokemon Sets by Average Graded Price
+  • Vintage and special‑illustration sets lead on average price.
+  • Modern chase sets can appear but with less consistency.
+  • Set-level aggregation smooths card-level noise.
+- Price Distribution by Condition
+  • Graded cards shift the distribution right with heavier upper tails.
+  • Clear separation between graded/box vs loose/used segments.
+  • Quantifies the monetizable ‘condition premium’.
+- Pokemon Card Growth Analysis
+  • Appreciation is episodic with spikes and mean‑reversion.
+  • Growth correlates with hype cycles and releases.
+  • Quality holdings outperform peak-chasing.
+- Price Evolution: Top 3 Pokemon Cards by Growth
+  • Top growers share nostalgia and grading activity.
+  • Trend stability improves with authentication.
+  • Peaks align with market events; expect volatility.
+
+[Star Wars Action Figures Analysis]
+- Data Overview
+  • Same right‑skew; medians preferred over means.
+  • Key dimensions: condition (MoC/Loose), authenticity, year.
+  • Data structure supports condition × authenticity segmentation.
+- Top 10 Most Valuable Figures by Grading Status
+  • MoC + Authentic yields the highest median prices.
+  • Loose + Not Authentic has the lowest values.
+  • Packaging and certification effects are multiplicative.
+- Top 10 Best Selling Figures by Grading Status
+  • High sales volume concentrates in common figures.
+  • Premium variants drive price, not volume.
+  • Separate velocity SKUs from margin SKUs in strategy.
+- Price Distribution by Grading Status
+  • Boxplots show upward‑skew with strong outliers.
+  • Medians step up across authenticity tiers.
+  • Certification expands the upper spread.
+- Star Wars Figure Growth Analysis
+  • Median prices trend upward in cycles over time.
+  • MoC authentic shows the most durable appreciation.
+  • Peaks map to media/collector event timing.
+- Price Evolution: Top 3 Star Wars Figures by Growth (Authentic)
+  • Leaders exhibit persistent momentum vs peers.
+  • Growth stability correlates with authenticity.
+  • Short‑term spikes followed by consolidation.
